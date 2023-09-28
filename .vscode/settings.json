@@ -1,0 +1,9 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/root/virus2",
+            "binaryPath": "/root/virus2/program",
+            "binaryArgs": []
+        }
+    ]
+}
