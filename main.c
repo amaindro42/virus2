@@ -5,9 +5,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "domain/driven_ports/elf_handling_ports.c"
+
 char *file_open(char *filename, int *fd, struct stat *sb) {
 
-    *fd = open(filename, O_RDONLY);
+    *fd = open(filename, O_RDWR);
     if (*fd == -1) {
         printf("Error: cannot open file %s\n", filename);
         exit(1);
@@ -52,17 +54,10 @@ int main(int ac, char **av) {
 
     char *addr = file_open(av[1], &fd, &sb);
 
-    int magic_number = *(int*)addr;
-
-    if (magic_number == *(int*)"\177ELF") {
-        printf("Yay Elf file !\n");
+    if (file_handler(&addr, sb.st_size) != 0) {
+        printf("An error occured\n");
+        exit(1);
     }
-    else {
-        printf("Not an Elf file :%x %.4s\n", magic_number, &magic_number);
-    }
-
-    printf("File size: %ld\n", sb.st_size);
-
 
     return file_close(addr, fd, &sb);
 }

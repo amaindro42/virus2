@@ -3,8 +3,9 @@ CFLAGS=-Wall
 
 all: virus
 
-virus: main.c
-	$(CC) $(CFLAGS) -o virus main.c
+virus: $(wildcard *.c)
+	$(CC) $(CFLAGS) -c $(wildcard *.c)
+	$(CC) $(CFLAGS) -o virus $(wildcard *.o)
 
 clean:
-	rm -f virus
+	rm -f virus *.o
