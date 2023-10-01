@@ -4,7 +4,7 @@
 
 #include "../../tools/lib.h"
 
-int file_type(char **file, size_t size);
+int file_type(char *file, size_t size);
 
  #ifdef ELF_SUPPORT
   #include "../../adapters/driving_adapters/elf_adapter.h"

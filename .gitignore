@@ -1,0 +1,32 @@
+# binary files
+virus
+
+# Compiled object files
+*.o
+
+# Compiled dynamic libraries
+*.so
+
+# Compiled static libraries
+*.a
+
+# Executables
+*.exe
+*.out
+
+# Build directory
+/build/
+
+# Dependency files
+*.d
+
+# Editor files
+*~
+*.swp
+*.swo
+*.swn
+*.swm
+
+# OS generated files
+.DS_Store
+Thumbs.db
