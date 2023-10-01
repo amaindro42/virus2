@@ -1,5 +1,5 @@
 #include "tools/lib.h"
-#include "domain/driven_ports/file_type_ports.h"
+#include "domain/driving_ports/file_type_ports.h"
 
 char *file_open(char *filename, int *fd, struct stat *sb) {
 
@@ -48,7 +48,7 @@ int main(int ac, char **av) {
 
     char *addr = file_open(av[1], &fd, &sb);
 
-    if (file_type(&addr, sb.st_size) != 0) {
+    if (file_type(addr, sb.st_size) != 0) {
         printf("An error occured\n");
         exit(1);
     }
