@@ -1,77 +1,35 @@
 #include "elf_adapter.h"
 
 
-#define DEBUG
+// #define DEBUG
 
-static int elf_section_header_32(char *file, const size_t size) {
+static Elf64_Shdr *find_text_section_64(Elf64_Shdr *section_header, const int n_section, const size_t size, char *strtab) {
 
-    Elf32_Shdr *elf_section_header = (Elf32_Phdr*)file;
-    printf("ELF section header\n");
-#ifdef DEBUG
-    printf("%x sh_name\n", elf_section_header->sh_name); // section name
-    printf("%x sh_type\n", elf_section_header->sh_type); // 0 = inactive, 1 = program data, 2 = symbol table, 3 = string table, 4 = relocation entries with explicit addends, 5 = symbol hash table, 6 = dynamic linking information, 7 = notes, 8 = program space with no data, 9 = relocation entries, 10 = reserved, 11 = dynamic linker symbol table, 14 = array of constructors, 15 = array of destructors, 16 = array of pre-constructors, 17 = section group, 18 = extended section indices, 19 = number of defined types
-    printf("%x sh_flags\n", elf_section_header->sh_flags); // 1 = writable, 2 = occupied, 4 = executable, 0xf0000000 = processor-specific
-    printf("%x sh_addr\n", elf_section_header->sh_addr); // virtual address in memory
-    printf("%x sh_offset\n", elf_section_header->sh_offset); // offset in file
-    printf("%x sh_size\n", elf_section_header->sh_size); // size of section in file
-    printf("%x sh_link\n", elf_section_header->sh_link); // section header table index link
-    printf("%x sh_info\n", elf_section_header->sh_info); // extra information
-    printf("%x sh_addralign\n", elf_section_header->sh_addralign); // 0 = no alignment, otherwise must be a power of 2
-    printf("%x sh_entsize\n", elf_section_header->sh_entsize); // size of entries, 0 if section has no table
-#endif
-    return 0;
-}
-
-
-static int elf_section_header_64(char *file, const size_t size, char *strtab) {
-
-    Elf64_Shdr *elf_section_header = (Elf32_Phdr*)file;
     printf("==========\nELF section header\n==========\n");
+
+    for (int i = 0; i < n_section; i++) {
+        Elf64_Shdr *section = (Elf64_Shdr*)((char*)section_header + i * size);
 #ifdef DEBUG
-    printf("%s sh_name\n", strtab + elf_section_header->sh_name); // section name
-    printf("%x sh_type\n", elf_section_header->sh_type); // 0 = inactive, 1 = program data, 2 = symbol table, 3 = string table, 4 = relocation entries with explicit addends, 5 = symbol hash table, 6 = dynamic linking information, 7 = notes, 8 = program space with no data, 9 = relocation entries, 10 = reserved, 11 = dynamic linker symbol table, 14 = array of constructors, 15 = array of destructors, 16 = array of pre-constructors, 17 = section group, 18 = extended section indices, 19 = number of defined types
-    printf("%x sh_flags\n", elf_section_header->sh_flags); // 1 = writable, 2 = occupied, 4 = executable, 0xf0000000 = processor-specific
-    printf("%x sh_addr\n", elf_section_header->sh_addr); // virtual address in memory
-    printf("%x sh_offset\n", elf_section_header->sh_offset); // offset in file
-    printf("%x sh_size\n", elf_section_header->sh_size); // size of section in file
-    printf("%x sh_link\n", elf_section_header->sh_link); // section header table index link
-    printf("%x sh_info\n", elf_section_header->sh_info); // extra information
-    printf("%x sh_addralign\n", elf_section_header->sh_addralign); // 0 = no alignment, otherwise must be a power of 2
-    printf("%x sh_entsize\n", elf_section_header->sh_entsize); // size of entries, 0 if section has no table
+        printf("==========\nsection %d\n==========\n", i);
+        printf("%x offset\n", section - section_header); // section offset
+        printf("%s sh_name\n", strtab + section->sh_name); // section name
+        printf("%x sh_type\n", section->sh_type); // 0 = inactive, 1 = program data, 2 = symbol table, 3 = string table, 4 = relocation entries with explicit addends, 5 = symbol hash table, 6 = dynamic linking information, 7 = notes, 8 = program space with no data, 9 = relocation entries, 10 = reserved, 11 = dynamic linker symbol table, 14 = array of constructors, 15 = array of destructors, 16 = array of pre-constructors, 17 = section group, 18 = extended section indices, 19 = number of defined types
+        printf("%x sh_flags\n", section->sh_flags); // 1 = writable, 2 = occupied, 4 = executable, 0xf0000000 = processor-specific
+        printf("%x sh_addr\n", section->sh_addr); // virtual address in memory
+        printf("%x sh_offset\n", section->sh_offset); // offset in file
+        printf("%x sh_size\n", section->sh_size); // size of section in file
+        printf("%x sh_link\n", section->sh_link); // section header table index link
+        printf("%x sh_info\n", section->sh_info); // extra information
+        printf("%x sh_addralign\n", section->sh_addralign); // 0 = no alignment, otherwise must be a power of 2
+        printf("%x sh_entsize\n", section->sh_entsize); // size of entries, 0 if section has no table
 #endif
-    return 0;
-}
-
-static int elf_program_header_32(char *file, const size_t size) {
-
-    Elf32_Phdr *elf_program_header = (Elf32_Phdr*)file;
-    printf("==========\nELF program header\n==========\n");
-#ifdef DEBUG    
-    printf("%x p_type\n", elf_program_header->p_type); // 0 = unused, 1 = loadable segment, 2 = dynamic linking tables, 3 = program interpreter path name, 4 = note sections, 5 = unspecified semantics, 6 = program header table, 7 = thread-local storage template, 8 = thread-local storage, 9 = OS-specific semantics
-    printf("%x p_offset\n", elf_program_header->p_offset); // offset in file
-    printf("%x p_vaddr\n", elf_program_header->p_vaddr); // virtual address in memory
-    printf("%x p_paddr\n", elf_program_header->p_paddr); // reserved
-    printf("%x p_filesz\n", elf_program_header->p_filesz); // size of segment in file
-    printf("%x p_memsz\n", elf_program_header->p_memsz); // size of segment in memory
-    printf("%x p_flags\n", elf_program_header->p_flags); // 1 = executable, 2 = writable, 4 = readable
-    printf("%x p_align\n", elf_program_header->p_align); // 0 = no alignment, otherwise must be a power of 2
-#endif
-    return 0;
-}
-
-static int elf_program_header_64(char *file, const size_t size) {
-
-    Elf64_Phdr *elf_program_header = (Elf64_Phdr*)file;
-    printf("==========\nELF program header\n==========\n");
-#ifdef DEBUG
-    printf("%x p_type\n", elf_program_header->p_type); // 0 = unused, 1 = loadable segment, 2 = dynamic linking tables, 3 = program interpreter path name, 4 = note sections, 5 = unspecified semantics, 6 = program header table, 7 = thread-local storage template, 8 = thread-local storage, 9 = OS-specific semantics
-    printf("%x p_offset\n", elf_program_header->p_offset); // offset in file
-    printf("%x p_vaddr\n", elf_program_header->p_vaddr); // virtual address in memory
-    printf("%x p_paddr\n", elf_program_header->p_paddr); // reserved
-    printf("%x p_filesz\n", elf_program_header->p_filesz); // size of segment in file
-    printf("%x p_memsz\n", elf_program_header->p_memsz); // size of segment in memory
-    printf("%x p_align\n", elf_program_header->p_align); // 0 = no alignment, otherwise must be a power of 2
-#endif
+        if (section->sh_type == SHT_PROGBITS) {
+            if (strcmp(strtab + section->sh_name, ".text") == 0) {
+                printf("==========\n.text section\n==========\n");
+                return section;
+            }
+        }
+    }
     return 0;
 }
 
@@ -114,7 +72,7 @@ static int elf_file_header(char *header) {
 
 
     } else if (header[EI_CLASS] == ELFCLASS64) {
-        Elf64_Ehdr *elf_header = (Elf64_Ehdr*)header;
+        const Elf64_Ehdr *elf_header = (Elf64_Ehdr*)header;
         
 #ifdef DEBUG
         printf("%x e_type\n", elf_header->e_type); // 1 = relocatable, 2 = executable, 3 = shared, 4 = core
@@ -134,14 +92,12 @@ static int elf_file_header(char *header) {
         
         printf("==========\n64 bits\n==========\n");
 
-        Elf64_Addr entry_point = elf_header->e_entry;
+        const Elf64_Addr entry_point = elf_header->e_entry;
 
-        Elf64_Shdr *shstr = (Elf64_Shdr*)(header + elf_header->e_shoff + elf_header->e_shstrndx * elf_header->e_shentsize);
-        char *shstrtab = header + shstr->sh_offset;
+        const Elf64_Shdr *shstr = (Elf64_Shdr*)(header + elf_header->e_shoff + elf_header->e_shstrndx * elf_header->e_shentsize);
+        const char *shstrtab = header + shstr->sh_offset;
 
-        for (int i = 0; i < elf_header->e_shnum; i++) {
-            elf_section_header_64(header + elf_header->e_shoff + i * elf_header->e_shentsize, elf_header->e_shentsize, shstrtab);
-        }
+        const Elf64_Shdr *text_section = find_text_section_64(header + elf_header->e_shoff, elf_header->e_shnum, elf_header->e_shentsize, shstrtab);
 
     } else {
         printf("Error: unsupported ELF class\n");
